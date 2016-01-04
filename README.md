@@ -17,7 +17,7 @@ $ purl init
 #### 3. Run purl
 
 ```bash
-$ purl --proto ./protofile http://example.com/
+$ purl --pscript ./protoscript http://example.com/
 ```
 
 Install
