@@ -28,11 +28,14 @@ def parse_args(args):
     proto_script = ''
     curl_options = []
     for arg in sys.argv[1:]:
+        is_init = False;
         if arg[:8] == '--pscript=':
             proto_script = arg[8:]
+        elif arg == 'init':
+            is_init = True
         else:
             curl_options.append(arg)
-    return (proto_script, curl_options)
+    return (is_init, proto_script, curl_options)
 
 # load proto_script file and return succeed(True) or not(False), and binary
 def get_proto_binary(proto_script):
@@ -79,6 +82,46 @@ def process_curl(binary_path, curl_options):
     cat_ret.stdout.close()
     return curl_ret.communicate()[0]
 
+def write_init_protoscript():
+    pscript_path = os.path.join(os.getcwd(), 'protoscript')
+    if os.path.isfile(pscript_path):
+        print '[error] protoscript already exists.'
+        sys.exit(1)
+    try:
+        f = open(pscript_path, 'w')
+        f.write("""#!/usr/bin/env python
+
+# import compiled protobuf module
+# create with the following command if you haven't created:
+# $ protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/addressbook.proto
+import addressbook_pb2
+
+# change this method and put in
+def call():
+    person       = addressbook_pb2.Person()
+    person.id    = 1234
+    person.name  = "John Doe"
+    person.email = "jdoe@example.com"
+
+    phone        = person.phone.add()
+    phone.number = "555-4321"
+    phone.type   = addressbook_pb2.Person.HOME
+
+    # return serialized string with `SerializeToString` method
+    return person.SerializeToString()
+
+# don't change the following code
+if __name__ == '__main__':
+    result = call():
+""")
+        f.close()
+    except IOError:
+        print '[error] failed to write protoscript. Check permission and retry.'
+        sys.exit(1)
+
+    print '[info] protoscript created.'
+    sys.exit(0)
+
 #
 # Main procedure
 #
@@ -92,17 +135,22 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # parse command-line arguments
-    (proto_script, curl_options) = parse_args(sys.argv)
+    (is_init, proto_script, curl_options) = parse_args(sys.argv)
+
+    if is_init:
+        write_init_protoscript();
 
     # load proto_script and get binary
     if not os.path.isfile(proto_script):
         print '[error] PROTOBUF_SCRIPT is missing or not file.'
+        sys.exit(1)
+
     if not len(sys.argv) > 2:
         # check reference if you are not familiar with PROTOBUF_SCRIPT
         print '[error] usage:', sys.argv[0], '--pscript=PROTOBUF_SCRIPT', '[curl option(s)], URL'
         sys.exit(1)
 
-   (result, data) = get_proto_binary(proto_script)
+    (result, data) = get_proto_binary(proto_script)
     if not result:
         print '[error] invalid binary data given. check your protobuf script.'
         sys.exit(1)
