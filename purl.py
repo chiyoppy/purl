@@ -91,12 +91,16 @@ def write_init_protoscript():
         f = open(pscript_path, 'w')
         f.write("""#!/usr/bin/env python
 
-# import compiled protobuf module
-# create with the following command if you haven't created:
+# Import compiled protobuf module
+#
+# Create with the following command if you haven't created:
 # $ protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/addressbook.proto
+#
+# Check out Google's document:
+# https://developers.google.com/protocol-buffers/docs/pythontutorial
 import addressbook_pb2
 
-# change this method and put in
+# Change this method and put in
 def call():
     person       = addressbook_pb2.Person()
     person.id    = 1234
@@ -107,10 +111,10 @@ def call():
     phone.number = "555-4321"
     phone.type   = addressbook_pb2.Person.HOME
 
-    # return serialized string with `SerializeToString` method
+    # Return serialized string with `SerializeToString` method
     return person.SerializeToString()
 
-# don't change the following code
+# Don't change the following code
 if __name__ == '__main__':
     result = call():
 """)
@@ -142,12 +146,14 @@ if __name__ == '__main__':
 
     # load proto_script and get binary
     if not os.path.isfile(proto_script):
-        print '[error] PROTOBUF_SCRIPT is missing or not file.'
-        sys.exit(1)
+        proto_script = os.path.join(os.getcwd(), 'protoscript')
+        if not os.path.isfile(proto_script):
+            print '[error] PROTOBUF_SCRIPT is missing or not file.'
+            sys.exit(1)
 
-    if not len(sys.argv) > 2:
+    if not len(sys.argv) > 1:
         # check reference if you are not familiar with PROTOBUF_SCRIPT
-        print '[error] usage:', sys.argv[0], '--pscript=PROTOBUF_SCRIPT', '[curl option(s)], URL'
+        print '[error] usage:', sys.argv[0], '[--pscript=PROTOBUF_SCRIPT]', '[curl option(s)], URL'
         sys.exit(1)
 
     (result, data) = get_proto_binary(proto_script)

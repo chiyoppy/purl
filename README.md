@@ -20,6 +20,12 @@ $ purl init
 $ purl --pscript ./protoscript http://example.com/
 ```
 
+Or just do if proto script is in current directory:
+
+```bash
+$ purl http://example.com/
+```
+
 Install
 -------
 
